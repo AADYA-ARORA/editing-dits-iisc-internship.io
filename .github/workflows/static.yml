@@ -1,5 +1,4 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static site to GitHub Pages
+name: Build and deploy Jekyll site to GitHub Pages
 
 on:
   push:
@@ -16,23 +15,38 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1' # Required for GitHub Pages Jekyll
+
+      - name: Install dependencies
+        run: |
+          bundle init
+          echo 'gem "github-pages", group: :jekyll_plugins' >> Gemfile
+          bundle install
+
+      - name: Build Jekyll site
+        run: bundle exec jekyll build -d _site
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
   deploy:
+    runs-on: ubuntu-latest
+    needs: build
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload static files
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./  # uploads your index.html + assets
-
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
