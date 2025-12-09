@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Editing with Diffusion Transformers – Aadya Arora</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+            background: #fafafa;
+        }
+
+        h1, h2, h3 {
+            text-align: center;
+        }
+
+        .section {
+            margin-top: 60px;
+        }
+
+        .img-row {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .img-row img {
+            width: 280px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        .codebox {
+            padding: 12px;
+            background: #eee;
+            font-family: monospace;
+            border-radius: 6px;
+        }
+
+        .highlight {
+            background: #ffffcc;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Editing with Diffusion Transformers</h1>
+<h3>Research Intern – IISc Bangalore</h3>
+<h4>Mentor: Prof. Venkatesh Babu</h4>
+<h4>Aadya Arora</h4>
+
+<hr>
+
+<div class="section">
+<h2>Abstract</h2>
+<p>
+This project explores how <b>Diffusion Transformers (DiTs)</b> behave internally during the editing process,
+and develops <b>training-free techniques</b> for spatially controllable text-to-image editing.
+The work includes <b>layer ablations</b>, <b>attention injection experiments</b>, <b>regional prompting</b>,
+and <b>DreamBooth + LoRA experiments</b> to understand which layers contribute most to structure, texture,
+identity preservation, and prompt following.
+</p>
+</div>
+
+<hr>
+
+<div class="section">
+<h2>Motivation</h2>
+<p>
+While diffusion models excel at image synthesis, text-to-image editing for <b>precise spatial control</b>
+remains challenging. Most existing methods require fine-tuning or retraining. Your goal was to
+characterize which DIT layers are “vital” for prompt following and propose approaches for
+<b>training-free controllable editing.</b>
+</p>
+</div>
+
+<hr>
+
+<div class="section">
+<h2>1. Layer-Wise Ablation in DITs</h2>
+<p>
+Using the model architecture discussed in <i>Stable Flow: Vital Layers for Training-Free Image Editing</i>, you removed or bypassed individual DIT layers and generated outputs for several prompts.
+This reveals:
+</p>
+
+<ul>
+    <li>Early layers → affect coarse layout</li>
+    <li>Middle layers → modify identity, pose, semantics</li>
+    <li>Late layers → mostly refine texture and details</li>
+</ul>
+
+<p>
+Below is an example from your ablations (from the PDF).  
+<b>You need to upload:</b>
+</p>
+
+<ul>
+    <li><b>cat_grid.jpg</b> – all cat generations for layer ablations (Page 1)</li>
+    <li><b>indian_woman_grid.jpg</b> – Taj Mahal experiment (Page 2)</li>
+    <li><b>christmas_grid.jpg</b> – Christmas girl experiment (Page 3)</li>
+</ul>
+
+<div class="img-row">
+    <img src="cat_grid.jpg" alt="Layer Ablation Cat">
+    <img src="indian_woman_grid.jpg" alt="Indian Woman Grid">
+    <img src="christmas_grid.jpg" alt="Christmas Grid">
+</div>
+
+<p>
+These visualisations show how <b>disabling specific layers destroys attributes such as background, pose, or color</b>.
+</p>
+
+</div>
+
+<hr>
+
+<div class="section">
+<h2>2. Stable Flow Replication + Analysis</h2>
+
+<p>
+From <b>Page 4–5</b> of the PDF, you replicated key findings:
+</p>
+
+<ul>
+<li>Attention injection in ALL layers hurts prompt alignment.</li>
+<li>Removing vital layers reduces image similarity.</li>
+<li>Certain layers dominate semantic adherence.</li>
+</ul>
+
+<p>
+You should upload:
+</p>
+<ul>
+    <li><b>stableflow_diagram.png</b> – architecture diagram (Page 4)</li>
+    <li><b>ablation_table.png</b> – highlighted table from Page 5</li>
+</ul>
+
+<div class="img-row">
+    <img src="stableflow_diagram.png" alt="">
+    <img src="ablation_table.png" alt="">
+</div>
+
+</div>
+
+<hr>
+
+<div class="section">
+<h2>3. Regional Prompting for Diffusion Transformers (Your Main Work)</h2>
+
+<p>
+You reproduced and extended the system on Pages <b>6–19</b>,
+implementing a <b>Unified Attention Mask</b> combining:
+</p>
+
+<ul>
+<li>Cross-attention masks (text→image, image→text)</li>
+<li>Self-attention masks (image→image, text→text)</li>
+<li>Regional masks (bounding boxes or binary maps)</li>
+</ul>
+
+<p>This yielded controllable region-wise editing:</p>
+
+<div class="img-row">
+    <img src="regional_prompting_1.jpg">
+    <img src="regional_prompting_2.jpg">
+</div>
+
+<p><b>You must upload:</b></p>
+
+<ul>
+    <li><b>regional_prompting_1.jpg</b> – two-tree example from Page 7</li>
+    <li><b>regional_prompting_2.jpg</b> – sample outputs from Page 17</li>
+    <li><b>attention_masks.png</b> – from Page 12–13</li>
+</ul>
+
+</div>
+
+<hr>
+
+<div class="section">
+<h2>4. Unified Attention Mask – Your Implementation</h2>
+
+<p>
+You implemented the equations (Pages 14–16) to create a unified attention mask:
+</p>
+
+<div class="codebox">
+M = CrossAttentionMask + SelfAttentionMask
+</div>
+
+<p>
+This mask ensures:
+</p>
+<ul>
+<li>Each prompt aligns to the correct region</li>
+<li>Regions remain internally coherent</li>
+<li>No leakage between unrelated text tokens</li>
+</ul>
+
+<p>
+Upload:
+</p>
+<ul>
+    <li><b>unified_mask.png</b> – Page 12–13 figure</li>
+</ul>
+
+<div class="img-row">
+    <img src="unified_mask.png">
+</div>
+
+</div>
+
+<hr>
+
+<div class="section">
+<h2>5. DreamBooth + LoRA Experiments</h2>
+
+<p>
+You tested:
+</p>
+<ul>
+<li>Full model LoRA (Page 21)</li>
+<li>Partial LoRA on layers 1–11</li>
+<li>Partial LoRA on layers 12–34</li>
+</ul>
+
+<p>
+These tests show how personalisation modifies specific levels of representation depth.</p>
+
+<div class="img-row">
+    <img src="lora_full.jpg">
+    <img src="lora_1_11.jpg">
+    <img src="lora_12_34.jpg">
+</div>
+
+<p><b>Please upload:</b></p>
+
+<ul>
+<li><b>lora_full.jpg</b> – Page 21 output</li>
+<li><b>lora_1_11.jpg</b> – Page 22 output</li>
+<li><b>lora_12_34.jpg</b> – Page 23 output</li>
+</ul>
+
+</div>
+
+<hr>
+
+<div class="section">
+<h2>6. Training Data Used</h2>
+
+<div class="img-row">
+    <img src="training_data.jpg">
+</div>
+
+<p><b>Upload:</b> <b>training_data.jpg</b> – Page 20 (dog photos)</p>
+
+</div>
+
+<hr>
+
+<div class="section">
+<h2>7. Key Takeaways</h2>
+
+<ul>
+<li>Early DIT layers shape coarse structure.</li>
+<li>Middle layers define semantics and object identity.</li>
+<li>Late layers refine fine textures.</li>
+<li>Unified Attention Mask gives strong regional control.</li>
+<li>LoRA at different depth levels edits different feature scales.</li>
+</ul>
+</div>
+
+<hr>
+
+<div class="section">
+<h2>Downloads</h2>
+
+<ul>
+<li><a href="Editing-with-DIT-models.pdf">Project Report (PDF)</a></li>
+<li><a href="">Code Repository (GitHub)</a></li>
+</ul>
+
+</div>
+
+<br><br>
+
+</body>
+</html>
